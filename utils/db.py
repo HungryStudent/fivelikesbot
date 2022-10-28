@@ -135,7 +135,7 @@ async def reset_rating():
 async def get_top():
     conn = await asyncpg.connect(user=user, password=password, database=database, host=host)
     row = await conn.fetch(
-        "SELECT user_id, name, rating FROM users ORDER BY rating DESC LIMIT 10")
+        "SELECT user_id, name, rating FROM users WHERE is_banned = false ORDER BY rating DESC LIMIT 10")
     await conn.close()
     return row
 
