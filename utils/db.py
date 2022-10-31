@@ -135,7 +135,7 @@ async def reset_rating():
 async def get_top():
     conn = await asyncpg.connect(user=user, password=password, database=database, host=host)
     row = await conn.fetch(
-        "SELECT user_id, name, rating FROM users WHERE is_banned = false ORDER BY rating DESC LIMIT 10")
+        "SELECT DISTINCT user_id, name, rating FROM users WHERE is_ban = false ORDER BY rating DESC LIMIT 10")
     await conn.close()
     return row
 
@@ -143,7 +143,7 @@ async def get_top():
 async def get_today_top():
     conn = await asyncpg.connect(user=user, password=password, database=database, host=host)
     row = await conn.fetch(
-        "SELECT user_id, name, today_rating as rating FROM users ORDER BY today_rating DESC LIMIT 10")
+        "SELECT DISTINCT user_id, name, today_rating as rating FROM users WHERE is_ban = false ORDER BY today_rating DESC LIMIT 10")
     await conn.close()
     return row
 
@@ -260,5 +260,12 @@ async def get_ending_premium():
     conn = await asyncpg.connect(user=user, password=password, database=database, host=host)
     rows = await conn.fetch(f"SELECT user_id FROM users WHERE (premium_time - $1 BETWEEN 0 and 3600)",
                             int(time.time()))
+    await conn.close()
+    return rows
+
+
+async def get_start_users():
+    conn = await asyncpg.connect(user=user, password=password, database=database, host=host)
+    rows = await conn.fetch(f"SELECT user_id FROM users WHERE name = '/start';")
     await conn.close()
     return rows

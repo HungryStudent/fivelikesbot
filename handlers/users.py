@@ -104,6 +104,10 @@ async def cancel_input(message: Message, state: FSMContext):
 
 @dp.message_handler(state=RegStates.enter_name)
 async def enter_photo(message: Message, state: FSMContext):
+    if "@" in message.text or "_" in message.text or "." in message.text or "," in message.text or "/" in message.text or message.text.lower() in bad_words or validators.url(
+            message.text) or len(message.text.split()) > 1:
+        await message.answer("Введите корректное имя!")
+        return
     await message.answer(enter_photo_text.format(message.text))
     await state.update_data(name=message.text)
     await RegStates.next()
@@ -123,7 +127,6 @@ async def add_user(message: Message, state: FSMContext):
     await message.answer(finish_reg_text)
     await message.answer_chat_action("typing")
     await asyncio.sleep(2)
-    await message.answer(no_partner_text, reply_markup=kb.get_partner(partner_url))
     await message.answer(check_menu_text, reply_markup=kb.menu_kb)
 
 

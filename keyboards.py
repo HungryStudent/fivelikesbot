@@ -93,8 +93,11 @@ def get_estimate(user_id, have_premium, owner_id=0, premium=1, back=0):
     if have_premium:
         sms_text = "Написать"
         back_text = "⬅ Назад"
-    kb.add(InlineKeyboardButton(back_text, callback_data=back_data.new(owner_id)),
-           InlineKeyboardButton(sms_text, callback_data=send_sms_data.new(user_id)))
+    if not back:
+        kb.add(InlineKeyboardButton(back_text, callback_data=back_data.new(owner_id)),
+               InlineKeyboardButton(sms_text, callback_data=send_sms_data.new(user_id)))
+    else:
+        kb.add(InlineKeyboardButton(sms_text, callback_data=send_sms_data.new(user_id)))
     kb.add(InlineKeyboardButton("⛔️Пожаловаться", callback_data=report_data.new(user_id)))
     return kb
 
