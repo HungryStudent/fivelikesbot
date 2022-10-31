@@ -19,7 +19,7 @@ menu_kb = ReplyKeyboardMarkup(row_width=3, resize_keyboard=True).add(KeyboardBut
     KeyboardButton('Поддержка / О боте 💬'))
 
 my_estimates = InlineKeyboardMarkup(row_width=1).add(
-    InlineKeyboardButton('✨ Изменить имя', callback_data=change_data.new("me_estimate")))
+    InlineKeyboardButton('Кто меня оценил❓', callback_data=change_data.new("me_estimate")))
 
 active_profile = InlineKeyboardMarkup(row_width=2).add(
     InlineKeyboardButton('✨ Изменить имя', callback_data=change_data.new("name")),

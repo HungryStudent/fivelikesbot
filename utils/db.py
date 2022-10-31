@@ -241,24 +241,24 @@ async def change_ban(user_id, flag):
 async def get_not_view():
     conn = await asyncpg.connect(user=user, password=password, database=database, host=host)
     rows = await conn.fetch(
-        f"SELECT user_id FROM users WHERE ($1 - last_online BETWEEN 259200 and 345600) and EXISTS(SELECT id FROM likes " \
+        f"SELECT DISTINCT user_id FROM users WHERE $1 - last_online > 86400 and EXISTS(SELECT id FROM likes " \
         "WHERE likes.owner_id = users.user_id and likes.is_viewed = false)", int(time.time()))
     await conn.close()
-    return rows
+    users = [x["user_id"] for x in rows]
+    return users
 
 
 async def get_new_reg():
     conn = await asyncpg.connect(user=user, password=password, database=database, host=host)
-    rows = await conn.fetch(f"SELECT user_id, name FROM users WHERE ($1 - reg_date BETWEEN 172800 and 259200)",
+    rows = await conn.fetch(f"SELECT DISTINCT user_id, name FROM users WHERE ($1 - reg_date BETWEEN 172800 and 259200)",
                             int(time.time()))
     await conn.close()
-    print("gogo")
     return rows
 
 
 async def get_ending_premium():
     conn = await asyncpg.connect(user=user, password=password, database=database, host=host)
-    rows = await conn.fetch(f"SELECT user_id FROM users WHERE (premium_time - $1 BETWEEN 0 and 3600)",
+    rows = await conn.fetch(f"SELECT DISTINCT user_id FROM users WHERE (premium_time - $1 BETWEEN 0 and 3600)",
                             int(time.time()))
     await conn.close()
     return rows
