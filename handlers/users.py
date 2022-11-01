@@ -178,7 +178,7 @@ async def my_profile(message: Message):
     if my_info_data["premium_time"] > time.time():
         now_day = datetime.today()
         premium_day = datetime.utcfromtimestamp(my_info_data["premium_time"])
-        premium_status = f"Активен, осталось дней - {(premium_day - now_day).days}"
+        premium_status = f"Активен, осталось дней - {(premium_day - now_day).days + 1}"
     else:
         premium_status = "Неактивен"
     keyboard = kb.active_profile
@@ -441,7 +441,7 @@ async def start_send_sms(call: CallbackQuery, callback_data: dict, state: FSMCon
         await SmsStates.enter_msg.set()
         await state.update_data(user_id=user_id)
     else:
-        await call.message.answer(premium_error_text)
+        await call.message.answer(premium_info_text, reply_markup=kb.premium)
     await call.answer()
 
 
