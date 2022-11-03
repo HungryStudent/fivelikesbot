@@ -1,19 +1,13 @@
 from aiogram.dispatcher.filters import Text
-from aiogram.types import Message, CallbackQuery, Update, ReplyKeyboardRemove
-from aiogram.dispatcher import Dispatcher, FSMContext
-from aiogram.dispatcher.handler import CancelHandler
-from aiogram.dispatcher.middlewares import BaseMiddleware
+from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
+from aiogram.dispatcher import FSMContext
 from aiogram_broadcaster import TextBroadcaster
-from create_bot import dp, log, bot
+from create_bot import dp, bot
 import keyboards as kb
 from handlers.texts import *
 from utils import db
 from states.admin import *
-from config import admin_chat, partner_chat, partner_url
-import asyncio
-from datetime import datetime
-import time
-from urllib import parse
+from config import admin_chat
 
 
 @dp.message_handler(state="*", text="Отменить", chat_id=admin_chat)
