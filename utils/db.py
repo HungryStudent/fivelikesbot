@@ -135,15 +135,17 @@ async def reset_rating():
 async def get_top():
     conn = await asyncpg.connect(user=user, password=password, database=database, host=host)
     row = await conn.fetch(
-        "SELECT DISTINCT user_id, name, rating FROM users WHERE is_ban = false ORDER BY rating DESC LIMIT 10")
+        "SELECT DISTINCT user_id, name, rating FROM users WHERE is_ban = false and (SELECT COUNT(score) FROM likes WHERE owner_id = users.user_id) > 30 ORDER BY rating DESC LIMIT 10")
     await conn.close()
     return row
 
 
 async def get_today_top():
     conn = await asyncpg.connect(user=user, password=password, database=database, host=host)
+    start = time.mktime(date.today().timetuple())
     row = await conn.fetch(
-        "SELECT DISTINCT user_id, name, today_rating as rating FROM users WHERE is_ban = false ORDER BY today_rating DESC LIMIT 10")
+        "SELECT DISTINCT user_id, name, today_rating as rating FROM users WHERE is_ban = false and (SELECT COUNT(score) FROM likes WHERE owner_id = users.user_id and unix_time > $1) > 30 ORDER BY today_rating DESC LIMIT 10",
+        int(start))
     await conn.close()
     return row
 

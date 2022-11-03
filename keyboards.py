@@ -125,7 +125,8 @@ def send_sms(user_id):
 
 
 def get_share(url):
-    return InlineKeyboardMarkup(row_width=1).add(InlineKeyboardButton("Поделиться", url=url))
+    return InlineKeyboardMarkup(row_width=1).add(InlineKeyboardButton("Поделиться", url=url),
+                                                 InlineKeyboardButton("Назад", callback_data="back_to_premium_info"))
 
 
 def admin_report(user_id, reporter_id):
@@ -141,4 +142,5 @@ def admin_amnesty(user_id):
 
 
 def get_pay(url):
-    return InlineKeyboardMarkup(row_width=1).add(InlineKeyboardButton("YooMoney", web_app=WebAppInfo(url=url)))
+    return InlineKeyboardMarkup(row_width=1).add(InlineKeyboardButton("Банковская карта", web_app=WebAppInfo(url=url)),
+                                                 InlineKeyboardButton("YooMoney", web_app=WebAppInfo(url=url)))

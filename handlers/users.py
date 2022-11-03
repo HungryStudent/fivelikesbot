@@ -1,3 +1,5 @@
+import re
+
 from aiogram.dispatcher.filters import Text
 from aiogram.types import Message, CallbackQuery, Update, ChatMember
 from aiogram.dispatcher import Dispatcher, FSMContext
@@ -39,6 +41,16 @@ class CheckRegMiddleware(BaseMiddleware):
             await bot.send_message(admin_chat, "Проблема с каналом партнером")
         if not await db.check_user(user_id):
             raise CancelHandler()
+
+
+def check_name(name: str):
+    print(len(name.split()))
+    if len(name.split()) > 2:
+        return False
+    print((name in bad_words))
+    if name in bad_words:
+        return False
+    return bool(re.search('[а-яА-Я]', name))
 
 
 async def check_ban(user_id, message: Message):
@@ -104,9 +116,8 @@ async def cancel_input(message: Message, state: FSMContext):
 
 @dp.message_handler(state=RegStates.enter_name)
 async def enter_photo(message: Message, state: FSMContext):
-    if "@" in message.text or "_" in message.text or "." in message.text or "," in message.text or "/" in message.text or message.text.lower() in bad_words or validators.url(
-            message.text) or len(message.text.split()) > 1:
-        await message.answer("Введите корректное имя!")
+    if check_name(message.text):
+        await message.answer("Пожалуйста, введите корректные данные!")
         return
     await message.answer(enter_photo_text.format(message.text))
     await state.update_data(name=message.text)
@@ -233,9 +244,8 @@ async def change_photo(message: Message, state: FSMContext):
 
 @dp.message_handler(state=ChangeStates.change_name)
 async def change_name(message: Message, state: FSMContext):
-    if "@" in message.text or "_" in message.text or "." in message.text or "," in message.text or "/" in message.text or message.text.lower() in bad_words or validators.url(
-            message.text) or len(message.text.split()) > 1:
-        await message.answer("Введите корректное имя!")
+    if check_name(message.text):
+        await message.answer("Пожалуйста, введите корректные данные!")
         return
     await db.change(message.from_user.id, "name", message.text.title())
     await message.answer("✨ Имя изменено", reply_markup=kb.menu_kb)
@@ -244,9 +254,8 @@ async def change_name(message: Message, state: FSMContext):
 
 @dp.message_handler(state=ChangeStates.change_city)
 async def change_city(message: Message, state: FSMContext):
-    if "@" in message.text or "_" in message.text or message.text.lower() in bad_words or validators.url(
-            message.text):
-        await message.answer("Введите корректный город!")
+    if check_name(message.text):
+        await message.answer("Пожалуйста, введите корректные данные!")
         return
     await db.change(message.from_user.id, "city", message.text)
     await message.answer("🏙 Город изменен", reply_markup=kb.menu_kb)
@@ -367,56 +376,18 @@ async def add_new_estimate(call: CallbackQuery, callback_data: dict):
 
 @dp.callback_query_handler(kb.report_data.filter())
 async def choose_report(call: CallbackQuery, callback_data: dict):
+    print("ok")
     user_id = callback_data["user_id"]
-    await call.message.answer("Выберите причину для жалобы",
-                              reply_markup=kb.get_report(user_id, call.message.message_id))
-    await call.answer()
-
-
-@dp.callback_query_handler(text="cancel_report")
-async def cancel_report(call: CallbackQuery):
-    await call.message.delete()
-
-
-@dp.callback_query_handler(text="cancel", state="*")
-async def cancel_other_rep(call: CallbackQuery, state: FSMContext):
-    await call.message.delete()
-    await call.answer()
-
-
-@dp.message_handler(state=ReportStates.enter_msg)
-async def send_other_report(message: Message, state: FSMContext):
-    data = await state.get_data()
-    await message.bot.delete_message(message.from_user.id, data["msg"])
-    await send_report(message.from_user.id, data["user_id"], message.text)
-    data = await db.get_user_for_estimate(message.from_user.id)
-    if data is None:
-        await message.answer("Упс, кажется анкеты закончились")
-        return
+    await db.add_new_estimate(call.from_user.id, int(user_id), "skip")
+    data = await db.get_user(int(user_id))
     age = data["age"]
     if data["age"] == 0:
         age = "не указано"
-    await message.answer_photo(data["photo_id"], caption=f"""✨ Имя: {data["name"]}
-👫 Пол: {data["gender"]}
-🔞 Возраст: {age}
-🏙 Город: {data["city"]}""", reply_markup=kb.get_estimate(data["user_id"],
-                                                         await db.check_premium(message.from_user.id), 0, 0, 1))
-
-
-@dp.callback_query_handler(kb.send_report_data.filter())
-async def send_base_report(call: CallbackQuery, callback_data: dict, state: FSMContext):
-    user_id = callback_data["user_id"]
-    rep_type = callback_data["rep_type"]
-    msg = callback_data["msg"]
-    if rep_type == "other":
-        await call.message.edit_text("Опишите причину жалобы", reply_markup=kb.in_cancel)
-        await ReportStates.enter_msg.set()
-        await state.update_data(user_id=user_id)
-        await state.update_data(msg=msg)
-        await call.answer()
-        return
-    await call.bot.delete_message(call.from_user.id, msg)
-    await send_report(call.from_user.id, user_id, report_types[rep_type])
+    await bot.send_photo(admin_chat, data["photo_id"], caption=f"""✨ Имя: {data["name"]}
+    👫 Пол: {data["gender"]}
+    🔞 Возраст: {age}
+    🏙 Город: {data["city"]}
+""", reply_markup=kb.admin_report(user_id, call.from_user.id))
     data = await db.get_user_for_estimate(call.from_user.id)
     if data is None:
         await call.message.answer("Упс, кажется анкеты закончились")
@@ -433,6 +404,12 @@ async def send_base_report(call: CallbackQuery, callback_data: dict, state: FSMC
     await call.message.delete()
 
 
+@dp.callback_query_handler(text="cancel", state="*")
+async def cancel_other_rep(call: CallbackQuery, state: FSMContext):
+    await call.message.delete()
+    await call.answer()
+
+
 @dp.callback_query_handler(kb.send_sms_data.filter())
 async def start_send_sms(call: CallbackQuery, callback_data: dict, state: FSMContext):
     if await db.check_premium(call.from_user.id):
@@ -441,7 +418,7 @@ async def start_send_sms(call: CallbackQuery, callback_data: dict, state: FSMCon
         await SmsStates.enter_msg.set()
         await state.update_data(user_id=user_id)
     else:
-        await call.message.answer(premium_info_text, reply_markup=kb.premium)
+        await call.message.answer(premium_info_text, reply_markup=kb.premium, parse_mode="HTML")
     await call.answer()
 
 
@@ -490,6 +467,17 @@ async def show_premium_free_info(call: CallbackQuery):
     await call.message.edit_text(premium_free_info_text.format(count=count, user_id=call.from_user.id),
                                  parse_mode="HTML",
                                  reply_markup=kb.get_share(url))
+
+
+@dp.callback_query_handler(text="back_to_premium_info")
+async def back_to_premium_info(call: CallbackQuery):
+    flag, data = await db.check_premium(call.from_user.id, get_date=True)
+    if flag:
+        date = datetime.utcfromtimestamp(data).strftime('%Y-%m-%d')
+        await call.message.edit_text(have_premium_free_info_text.format(date=date), reply_markup=kb.premium,
+                                     parse_mode="HTML")
+    else:
+        await call.message.edit_text(premium_info_text, reply_markup=kb.premium, parse_mode="HTML")
 
 
 @dp.callback_query_handler(text="ask_amnesty")

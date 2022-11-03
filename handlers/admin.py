@@ -24,14 +24,12 @@ async def cancel_input(message: Message, state: FSMContext):
 
 @dp.callback_query_handler(Text(startswith="ban_"), chat_id=admin_chat)
 async def ban_user(call: CallbackQuery):
-    reason = call.message.caption[call.message.caption.find("Жалоба:") + 8:]
-    print(call.message.caption[60:])
     data = call.data.split("_")
     await db.change_ban(int(data[1]), True)
     await call.message.answer(f"Пользователь <code>{data[1]}</code> заблокирован", parse_mode="HTML")
     reporter_data = await db.get_user(int(data[2]))
     await call.bot.send_message(data[2], accept_ban_reporter_text.format(name=reporter_data["name"]))
-    await call.bot.send_message(data[1], accept_ban_user_text.format(reason=reason), reply_markup=kb.ask_amnesty)
+    await call.bot.send_message(data[1], accept_ban_user_text, reply_markup=kb.ask_amnesty)
     await call.message.delete()
 
 
