@@ -43,10 +43,8 @@ class CheckRegMiddleware(BaseMiddleware):
 
 
 def check_name(name: str):
-    print(len(name.split()))
     if len(name.split()) > 2:
         return False
-    print((name in bad_words))
     if name in bad_words:
         return False
     return bool(re.search('[а-яА-Я]', name))
@@ -375,7 +373,6 @@ async def add_new_estimate(call: CallbackQuery, callback_data: dict):
 
 @dp.callback_query_handler(kb.report_data.filter())
 async def choose_report(call: CallbackQuery, callback_data: dict):
-    print("ok")
     user_id = callback_data["user_id"]
     await db.add_new_estimate(call.from_user.id, int(user_id), "skip")
     data = await db.get_user(int(user_id))
