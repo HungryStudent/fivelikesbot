@@ -1,9 +1,8 @@
-import time
-from datetime import date
-
-import asyncpg
-from asyncpg import Connection
 from config import user, password, database, host
+from asyncpg import Connection
+from datetime import date
+import asyncpg
+import time
 
 
 async def start():

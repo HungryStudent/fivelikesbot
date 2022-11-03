@@ -1,24 +1,23 @@
-import re
-
-from aiogram.dispatcher.filters import Text
 from aiogram.types import Message, CallbackQuery, Update, ChatMember
+from aiogram.dispatcher.middlewares import BaseMiddleware
 from aiogram.dispatcher import Dispatcher, FSMContext
 from aiogram.dispatcher.handler import CancelHandler
-from aiogram.dispatcher.middlewares import BaseMiddleware
 from aiogram.utils.exceptions import ChatNotFound
+from aiogram.dispatcher.filters import Text
 
-from create_bot import dp, bot
-import keyboards as kb
-from handlers.texts import *
-from utils import db
-from states.user import *
 from config import admin_chat, yoomoney_id, partner_chat, partner_url
-import asyncio
+from create_bot import dp, bot
 from datetime import datetime
-import time
-from urllib import parse
 from yoomoney import Quickpay
-import validators
+from handlers.texts import *
+from states.user import *
+from urllib import parse
+import keyboards as kb
+from utils import db
+import asyncio
+import time
+import re
+
 
 
 class CheckRegMiddleware(BaseMiddleware):
@@ -407,6 +406,7 @@ async def choose_report(call: CallbackQuery, callback_data: dict):
 @dp.callback_query_handler(text="cancel", state="*")
 async def cancel_other_rep(call: CallbackQuery, state: FSMContext):
     await call.message.delete()
+    await state.finish()
     await call.answer()
 
 

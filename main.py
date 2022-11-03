@@ -1,7 +1,6 @@
 from aiogram.utils import executor
-from create_bot import dp
 from handlers import users
-from utils import db
+from create_bot import dp
 
 
 async def on_startup(_):

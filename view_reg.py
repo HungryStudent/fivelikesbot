@@ -1,8 +1,7 @@
-import asyncio
-from aiogram_broadcaster import TextBroadcaster
 from utils.db import get_not_view, get_new_reg
-from create_bot import bot
 from keyboards import my_estimates, premium
+from create_bot import bot
+import asyncio
 
 
 async def main():
