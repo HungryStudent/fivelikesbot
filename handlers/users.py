@@ -43,10 +43,10 @@ class CheckRegMiddleware(BaseMiddleware):
 
 def check_name(name: str):
     if len(name.split()) > 2:
-        return False
+        return True
     if name in bad_words:
-        return False
-    return bool(re.search('[а-яА-Я]', name))
+        return True
+    return not bool(re.search('[а-яА-Я]', name))
 
 
 async def check_ban(user_id, message: Message):
@@ -121,7 +121,7 @@ async def enter_gender(message: Message, state: FSMContext):
     await RegStates.next()
 
 
-@dp.callback_query_handler(state=RegStates.enter_gender)
+@dp.callback_query_handler(Text(startswith="gender"), state=RegStates.enter_gender)
 async def enter_photo(call: CallbackQuery, state: FSMContext):
     data = await state.get_data()
     await call.message.edit_text(enter_photo_text.format(name=data["name"]))
