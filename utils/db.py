@@ -47,13 +47,12 @@ async def add_action(user_id):
     await conn.close()
 
 
-async def add_user(user_id, name, photo_id, ref_id):
+async def add_user(user_id, name, gender, photo_id, ref_id):
     conn = await asyncpg.connect(user=user, password=password,
                                  database=database, host=host)
     await conn.execute(
-        "INSERT INTO users(user_id, name, photo_id, premium_time, gender, age, city, rating, is_ban, is_deactivate, today_rating, invited, reg_date, last_online) VALUES ($1, $2, $3, 0, "
-        "'не указано', 0,'не указано', 0, false, false, 0, $4, $5, $6)",
-        user_id, name, photo_id, ref_id, int(time.time()), int(time.time()))
+        "INSERT INTO users(user_id, name, photo_id, premium_time, gender, age, city, rating, is_ban, is_deactivate, today_rating, invited, reg_date, last_online) VALUES ($1, $2, $3, 0, $4, 0,'не указано', 0, false, false, 0, $5, $6, $7)",
+        user_id, name, photo_id, gender, ref_id, int(time.time()), int(time.time()))
     await conn.close()
 
 

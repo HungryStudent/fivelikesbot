@@ -3,7 +3,9 @@ from aiogram.dispatcher.filters.state import StatesGroup, State
 
 class RegStates(StatesGroup):
     enter_name = State()
+    enter_gender = State()
     enter_photo = State()
+
 
 
 class ChangeStates(StatesGroup):
@@ -19,6 +21,7 @@ class ReportStates(StatesGroup):
 
 class SmsStates(StatesGroup):
     enter_msg = State()
+
 
 class AmnestyStates(StatesGroup):
     enter_msg = State()

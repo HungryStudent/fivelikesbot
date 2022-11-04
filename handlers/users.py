@@ -19,7 +19,6 @@ import time
 import re
 
 
-
 class CheckRegMiddleware(BaseMiddleware):
     async def on_pre_process_update(self, update: Update, data: dict):
         if update.message:
@@ -112,23 +111,33 @@ async def cancel_input(message: Message, state: FSMContext):
 
 
 @dp.message_handler(state=RegStates.enter_name)
-async def enter_photo(message: Message, state: FSMContext):
+async def enter_gender(message: Message, state: FSMContext):
     if check_name(message.text):
         await message.answer("Пожалуйста, введите корректные данные!")
         return
-    await message.answer(enter_photo_text.format(message.text))
+    await message.answer("Выберите пол", reply_markup=kb.gender)
+
     await state.update_data(name=message.text)
+    await RegStates.next()
+
+
+@dp.callback_query_handler(state=RegStates.enter_gender)
+async def enter_photo(call: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    await call.message.edit_text(enter_photo_text.format(name=data["name"]))
+    await state.update_data(gender=call.data[7:])
     await RegStates.next()
 
 
 @dp.message_handler(state=RegStates.enter_photo, content_types='photo')
 async def add_user(message: Message, state: FSMContext):
+    gender = {"m": "М", "f": "Ж"}
     data = await state.get_data()
     try:
         ref_id = int(data["ref_id"])
     except KeyError:
         ref_id = 0
-    await db.add_user(message.from_user.id, data["name"], message.photo[-1].file_id, ref_id)
+    await db.add_user(message.from_user.id, data["name"], gender[data["gender"]], message.photo[-1].file_id, ref_id)
     if ref_id != 0:
         await check_last_referal(ref_id)
     await state.finish()
