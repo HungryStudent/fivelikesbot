@@ -67,7 +67,7 @@ async def gift_premium(message: Message):
         return
     await db.add_premium(int(user_id), int(days))
     await message.answer("Premium выдан")
-    await message.bot.send_message(user_id, f"Администратор подключил вам премиум, дней {days}")
+    await message.bot.send_message(user_id, f"Администратор подключил вам премиум, дней - {days}")
 
 
 @dp.message_handler(commands="stat", chat_id=admin_chat)

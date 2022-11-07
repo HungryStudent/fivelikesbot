@@ -22,20 +22,54 @@ menu_kb = ReplyKeyboardMarkup(row_width=3, resize_keyboard=True).add(KeyboardBut
 my_estimates = InlineKeyboardMarkup(row_width=1).add(
     InlineKeyboardButton('Кто меня оценил❓', callback_data=change_data.new("me_estimate")))
 
-active_profile = InlineKeyboardMarkup(row_width=2).add(
-    InlineKeyboardButton('✨ Изменить имя', callback_data=change_data.new("name")),
-    InlineKeyboardButton('👫 Изменить пол', callback_data=change_data.new("gender")),
-    InlineKeyboardButton('🔞 Изменить возраст', callback_data=change_data.new("age")),
-    InlineKeyboardButton('🏙 Изменить город', callback_data=change_data.new("city")),
-    InlineKeyboardButton('🎗 Добавить Instagram', callback_data=change_data.new("inst")),
-    InlineKeyboardButton('📸 Изменить фото', callback_data=change_data.new("photo"))).add(
-    InlineKeyboardButton('🚫 Отключить мою анкету', callback_data="deactivate"))
+
+async def active_profile(premium_bool):
+    kb = InlineKeyboardMarkup(row_width=2)
+    if premium_bool:
+        kb.add(InlineKeyboardButton('✨ Изменить имя', callback_data=change_data.new("name")),
+               InlineKeyboardButton('👫 Изменить пол', callback_data=change_data.new("gender")))
+        kb.add(InlineKeyboardButton('🔞 Изменить возраст', callback_data=change_data.new("age")))
+        kb.add(InlineKeyboardButton('🏙 Изменить город', callback_data=change_data.new("city")))
+        kb.add(InlineKeyboardButton('👤 Добавить Instagram', callback_data=change_data.new("inst")))
+        kb.add(InlineKeyboardButton('📸 Изменить фото', callback_data=change_data.new("photo")))
+        kb.add(InlineKeyboardButton('🚫 Отключить мою анкету', callback_data="deactivate"))
+    else:
+        kb.add(InlineKeyboardButton('✨ Изменить имя', callback_data=change_data.new("name")),
+               InlineKeyboardButton('👫 Изменить пол', callback_data=change_data.new("gender")))
+        kb.add(InlineKeyboardButton('🔞 Изменить возраст', callback_data=change_data.new("age")))
+        kb.add(InlineKeyboardButton('🏙 Изменить город', callback_data=change_data.new("city")))
+        kb.add(InlineKeyboardButton('🎗 Добавить Instagram', callback_data=change_data.new("inst")))
+        kb.add(InlineKeyboardButton('📸 Изменить фото', callback_data=change_data.new("photo")))
+        kb.add(InlineKeyboardButton('✅ Включить мою анкету', callback_data="activate"))
+    return kb
+
+
+async def deactive_profile(premium_bool):
+    kb = InlineKeyboardMarkup(row_width=2)
+    if premium_bool:
+        kb.add(InlineKeyboardButton('✨ Изменить имя', callback_data=change_data.new("name")),
+               InlineKeyboardButton('👫 Изменить пол', callback_data=change_data.new("gender")))
+        kb.add(InlineKeyboardButton('🔞 Изменить возраст', callback_data=change_data.new("age")))
+        kb.add(InlineKeyboardButton('🏙 Изменить город', callback_data=change_data.new("city")))
+        kb.add(InlineKeyboardButton('👤 Добавить Instagram', callback_data=change_data.new("inst")))
+        kb.add(InlineKeyboardButton('📸 Изменить фото', callback_data=change_data.new("photo")))
+        kb.add(InlineKeyboardButton('✅ Включить мою анкету', callback_data="activate"))
+    else:
+        kb.add(InlineKeyboardButton('✨ Изменить имя', callback_data=change_data.new("name")),
+               InlineKeyboardButton('👫 Изменить пол', callback_data=change_data.new("gender")))
+        kb.add(InlineKeyboardButton('🔞 Изменить возраст', callback_data=change_data.new("age")))
+        kb.add(InlineKeyboardButton('🏙 Изменить город', callback_data=change_data.new("city")))
+        kb.add(InlineKeyboardButton('🎗 Добавить Instagram', callback_data=change_data.new("inst")))
+        kb.add(InlineKeyboardButton('📸 Изменить фото', callback_data=change_data.new("photo")))
+        kb.add(InlineKeyboardButton('✅ Включить мою анкету', callback_data="activate"))
+    return kb
 
 deactive_profile = InlineKeyboardMarkup(row_width=2).add(
     InlineKeyboardButton('✨ Изменить имя', callback_data=change_data.new("name")),
     InlineKeyboardButton('👫 Изменить пол', callback_data=change_data.new("gender")),
     InlineKeyboardButton('🔞 Изменить возраст', callback_data=change_data.new("age")),
     InlineKeyboardButton('🏙 Изменить город', callback_data=change_data.new("city")),
+    InlineKeyboardButton('🎗 Добавить Instagram', callback_data=change_data.new("inst")),
     InlineKeyboardButton('📸 Изменить фото', callback_data=change_data.new("photo"))).add(
     InlineKeyboardButton('✅ Включить мою анкету', callback_data="activate"))
 
@@ -56,9 +90,11 @@ in_cancel = InlineKeyboardMarkup(row_width=1).add(InlineKeyboardButton("Отме
 admin_cancel = ReplyKeyboardMarkup(resize_keyboard=True).add(KeyboardButton("Отменить"))
 
 premium = InlineKeyboardMarkup(row_width=1).add(
-    InlineKeyboardButton("24 часа Premium, 99 rub", callback_data=buy_premium_data.new(99, 1)),
-    InlineKeyboardButton("72 часа Premium, 199 rub", callback_data=buy_premium_data.new(199, 3)),
-    InlineKeyboardButton("7 дней Premium, 299 rub", callback_data=buy_premium_data.new(299, 7)),
+    InlineKeyboardButton("Неделя Premium, 99 rub", callback_data=buy_premium_data.new(99, 1)),
+    InlineKeyboardButton("Месяц Premium, 219 rub", callback_data=buy_premium_data.new(219, 3)),
+    InlineKeyboardButton("2 месяца Premium, 429 rub", callback_data=buy_premium_data.new(429, 7)),
+    InlineKeyboardButton("6 месяцев Premium, 1255 rub", callback_data=buy_premium_data.new(1255, 7)),
+    InlineKeyboardButton("Год Premium, 2499 rub", callback_data=buy_premium_data.new(2499, 7)),
     InlineKeyboardButton("Получить бесплатно", callback_data="premium_free"))
 
 ask_amnesty = InlineKeyboardMarkup(row_width=1).add(
@@ -133,9 +169,12 @@ def get_report(user_id, msg):
 def send_sms(user_id):
     return InlineKeyboardMarkup(row_width=1).add(
         InlineKeyboardButton("Отправить сообщение", callback_data=send_sms_data.new(user_id)))
+
+
 def answer_sms(user_id):
     return InlineKeyboardMarkup(row_width=1).add(
         InlineKeyboardButton("Отправить сообщение", callback_data=answer_sms_data.new(user_id)))
+
 
 def get_share(url):
     return InlineKeyboardMarkup(row_width=1).add(InlineKeyboardButton("Поделиться", url=url),

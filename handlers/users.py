@@ -200,9 +200,9 @@ async def my_profile(message: Message):
         premium_status = f"Активен, осталось дней - {(premium_day - now_day).days + 1}"
     else:
         premium_status = "Неактивен"
-    keyboard = kb.active_profile
+    keyboard = await kb.active_profile(my_info_data["premium_time"] > time.time())
     if my_info_data["is_deactivate"]:
-        keyboard = kb.deactive_profile
+        keyboard = await kb.deactive_profile(my_info_data["premium_time"] > time.time())
 
     await message.answer_photo(my_info_data["photo_id"], caption=f"""
 ✨ Имя: {my_info_data["name"]}
@@ -232,10 +232,11 @@ async def change(call: CallbackQuery, callback_data: dict):
         await ChangeStates.change_age.set()
     if change_type == "inst":
         if await db.check_premium(call.from_user.id):
-            await call.message.answer("Введите Instagram", reply_markup=kb.cancel)
+            await call.message.answer("Отправьте ссылку на свой профиль в Instagram:", reply_markup=kb.cancel)
             await ChangeStates.change_inst.set()
         else:
-            await call.message.answer(back_premium_error_text, reply_markup=kb.premium)
+            await call.message.answer(premium_error_text, reply_markup=kb.premium, parse_mode='Markdown',
+                                      disable_web_page_preview=True)
 
     if change_type == "photo":
         await call.message.answer("""Ваш рейтинг будет обнулен! 
@@ -393,7 +394,8 @@ async def back_estimate(call: CallbackQuery, callback_data: dict):
                                                              selected_gender=gender, premium_bool=1, back=1))
         await call.message.delete()
     else:
-        await call.message.answer(back_premium_error_text, reply_markup=kb.premium)
+        await call.message.answer(premium_error_text, reply_markup=kb.premium, parse_mode='Markdown',
+                                  disable_web_page_preview=True)
     await call.answer()
 
 
@@ -477,9 +479,12 @@ async def start_send_sms(call: CallbackQuery, callback_data: dict, state: FSMCon
 async def send_sms(message: Message, state: FSMContext):
     data = await db.get_user(message.from_user.id)
     receiver_data = await state.get_data()
-    await message.bot.send_message(receiver_data["user_id"],
-                                   f"Сообщение от {data['name']}, {data['age']}: {message.text}",
-                                   reply_markup=kb.answer_sms(message.from_user.id))
+    try:
+        await message.bot.send_message(receiver_data["user_id"],
+                                       f"Сообщение от {data['name']}, {data['age']}: {message.text}",
+                                       reply_markup=kb.answer_sms(message.from_user.id))
+    except:
+        pass
     await message.answer(finish_sms_text, reply_markup=kb.menu_kb)
     await state.finish()
 
