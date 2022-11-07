@@ -91,24 +91,25 @@ async def get_user(user_id):
     return row
 
 
-async def get_user_for_estimate(user_id, premium=1):
+async def get_user_for_estimate(user_id, gender, premium=1):
+    gender_dict = {"m": "М", "f": "Ж", "all": "%"}
     conn = await asyncpg.connect(user=user, password=password, database=database, host=host)
     if premium:
         query = "SELECT user_id, name, photo_id, gender, age, city  FROM users WHERE NOT EXISTS(SELECT id FROM likes " \
                 "WHERE likes.user_id=$1 and likes.owner_id = users.user_id) and users.user_id <> $2 and is_ban = " \
-                "false and is_deactivate = false and premium_time > $3 "
+                f"false and is_deactivate = false and premium_time > $3 and gender = '{gender_dict[gender]}'"
         row = await conn.fetchrow(query, user_id, user_id, int(time.time()))
         if row is not None:
             await conn.close()
             return row
     query = "SELECT user_id, name, photo_id, gender, age, city  FROM users WHERE NOT EXISTS(SELECT id FROM likes " \
             "WHERE likes.user_id=$1 and likes.owner_id = users.user_id) and users.user_id <> $2 and is_ban = false " \
-            "and is_deactivate = false and premium_time < $3 "
+            f"and is_deactivate = false and premium_time < $3 and gender LIKE '{gender_dict[gender]}'"
     row = await conn.fetchrow(query, user_id, user_id, int(time.time()))
     if row is None:
         query = "SELECT user_id, name, photo_id, gender, age, city  FROM users WHERE NOT EXISTS(SELECT id FROM likes " \
                 "WHERE likes.user_id=$1 and likes.owner_id = users.user_id) and users.user_id <> $2 and is_ban = " \
-                "false and is_deactivate = false and premium_time > $3 "
+                f"false and is_deactivate = false and premium_time > $3 and gender = '{gender_dict[gender]}'"
         row = await conn.fetchrow(query, user_id, user_id, int(time.time()))
         return row
     await conn.close()

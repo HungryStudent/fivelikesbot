@@ -4,8 +4,8 @@ from utils import db
 
 user_data = CallbackData("user", "user_id")
 change_data = CallbackData("change", "type")
-back_data = CallbackData("back", "user_id")
-estimate_data = CallbackData("estimate", "user_id", "score", "premium")
+back_data = CallbackData("back", "user_id", "gender")
+estimate_data = CallbackData("estimate", "user_id", "score", "premium", "gender")
 report_data = CallbackData("report", "user_id")
 send_report_data = CallbackData("send_report", "user_id", "rep_type", "msg")
 send_sms_data = CallbackData("send_sms", "user_id")
@@ -40,6 +40,11 @@ deactive_profile = InlineKeyboardMarkup(row_width=2).add(
 accept_deactivate = InlineKeyboardMarkup(row_width=2).add(
     InlineKeyboardButton("Отключить", callback_data="deactivate_accept"),
     InlineKeyboardButton("Не отключать", callback_data="deactivate_cancel"))
+
+estimate_gender = InlineKeyboardMarkup(row_width=2).add(
+    InlineKeyboardButton("👱🏻‍♂️М", callback_data="estimate_gender_m"),
+    InlineKeyboardButton("👩🏻‍🦳 Ж", callback_data="estimate_gender_f"),
+    InlineKeyboardButton("👫 Всех", callback_data="estimate_gender_all"))
 
 gender = InlineKeyboardMarkup(row_width=2).add(InlineKeyboardButton("👱🏻‍♂️М", callback_data="gender_m"),
                                                InlineKeyboardButton("👩🏻‍🦳 Ж", callback_data="gender_f"))
@@ -83,18 +88,19 @@ async def get_top(top_time):
     return kb
 
 
-def get_estimate(user_id, have_premium, owner_id=0, premium=1, back=0):
+def get_estimate(user_id, have_premium, selected_gender, owner_id=0, premium_bool=1, back=0):
     kb = InlineKeyboardMarkup(row_width=5)
     score_emoji = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣"]
     for i in range(5):
-        kb.insert(InlineKeyboardButton(score_emoji[i], callback_data=estimate_data.new(user_id, i + 1, premium)))
+        kb.insert(InlineKeyboardButton(score_emoji[i],
+                                       callback_data=estimate_data.new(user_id, i + 1, premium_bool, selected_gender)))
     sms_text = "🎗Написать"
     back_text = "🎗 Назад"
     if have_premium:
         sms_text = "Написать"
         back_text = "⬅ Назад"
     if not back:
-        kb.add(InlineKeyboardButton(back_text, callback_data=back_data.new(owner_id)),
+        kb.add(InlineKeyboardButton(back_text, callback_data=back_data.new(owner_id, selected_gender)),
                InlineKeyboardButton(sms_text, callback_data=send_sms_data.new(user_id)))
     else:
         kb.add(InlineKeyboardButton(sms_text, callback_data=send_sms_data.new(user_id)))

@@ -322,26 +322,34 @@ async def show_user_profile(call: CallbackQuery, callback_data: dict):
 
 
 @dp.message_handler(text="Оценивать ➡️")
-async def show_estimate(message: Message):
+async def choose_estimate_gender(message: Message):
     await check_ban(message.from_user.id, message)
-    data = await db.get_user_for_estimate(message.from_user.id)
+    await message.answer(what_gender_text, reply_markup=kb.estimate_gender)
+
+
+@dp.callback_query_handler(Text(startswith="estimate_gender"))
+async def show_estimate(call: CallbackQuery):
+    gender = call.data.split("_")[2]
+    data = await db.get_user_for_estimate(call.from_user.id, gender)
     if data is None:
-        await message.answer("Упс, кажется анкеты закончились")
+        await call.message.edit_text("Упс, кажется анкеты закончились")
         return
     age = data["age"]
     if data["age"] == 0:
         age = "не указано"
-    await message.answer_photo(data["photo_id"], caption=f"""✨ Имя: {data["name"]}
+    await call.message.answer_photo(data["photo_id"], caption=f"""✨ Имя: {data["name"]}
 👫 Пол: {data["gender"]}
 🔞 Возраст: {age}
 🏙 Город: {data["city"]}""", reply_markup=kb.get_estimate(data["user_id"],
-                                                         await db.check_premium(message.from_user.id), 0, 0, 1))
+                                                         await db.check_premium(call.from_user.id), gender, 0, 0, 1))
+    await call.message.delete()
 
 
 @dp.callback_query_handler(kb.back_data.filter())
 async def back_estimate(call: CallbackQuery, callback_data: dict):
     if await db.check_premium(call.from_user.id):
         owner_id = int(callback_data["user_id"])
+        gender = callback_data["gender"]
         data = await db.get_user(owner_id)
         age = data["age"]
         if data["age"] == 0:
@@ -350,7 +358,8 @@ async def back_estimate(call: CallbackQuery, callback_data: dict):
 👫 Пол: {data["gender"]}
 🔞 Возраст: {age}
 🏙 Город: {data["city"]}""", reply_markup=kb.get_estimate(owner_id,
-                                                         await db.check_premium(call.from_user.id), premium=1, back=1))
+                                                         await db.check_premium(call.from_user.id),
+                                                         selected_gender=gender, premium_bool=1, back=1))
         await call.message.delete()
     else:
         await call.message.answer(back_premium_error_text, reply_markup=kb.premium)
@@ -362,9 +371,9 @@ async def add_new_estimate(call: CallbackQuery, callback_data: dict):
     premium = int(callback_data["premium"])
     owner_id = int(callback_data["user_id"])
     score = callback_data["score"]
+    gender = callback_data["gender"]
     await db.add_new_estimate(call.from_user.id, owner_id, score)
-
-    data = await db.get_user_for_estimate(call.from_user.id, premium)
+    data = await db.get_user_for_estimate(call.from_user.id, gender, premium)
     if data is None:
         await call.message.answer("Упс, кажется анкеты закончились")
         await call.message.delete()
@@ -376,7 +385,7 @@ async def add_new_estimate(call: CallbackQuery, callback_data: dict):
 👫 Пол: {data["gender"]}
 🔞 Возраст: {age}
 🏙 Город: {data["city"]}""", reply_markup=kb.get_estimate(data["user_id"], await db.check_premium(call.from_user.id),
-                                                         owner_id, 1 - premium))
+                                                         gender, owner_id, 1 - premium))
     await call.message.delete()
 
 

@@ -47,6 +47,8 @@ have_premium_free_info_text = """<b>Premium подключён, действуе
 
 pay_info_text = "Переходите по ссылке и оплачивайте"
 
+what_gender_text = "Выберите пол, кого Вы будетео оценивать"
+
 premium_free_info_text = """<b>Приглашай друзей по своей реферальной ссылке и получай Premium бесплатно!</b>
 
 3 друга - 1 день Premium
