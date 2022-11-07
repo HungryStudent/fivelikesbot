@@ -73,6 +73,7 @@ async def send_report(reporter_id, user_id, text):
 👫 Пол: {data["gender"]}
 🔞 Возраст: {age}
 🏙 Город: {data["city"]}
+📸 Instagram: {data["inst"]}
 
 Жалоба: {text}""", reply_markup=kb.admin_report(user_id, reporter_id))
 
@@ -89,6 +90,7 @@ async def show_me_estimate(message: Message, user_id):
 👫 Пол: {data["gender"]}
 🔞 Возраст: {age}
 🏙 Город: {data["city"]}
+📸 Instagram: {data["inst"]}
 Оценил(-а) вас на {score}/5""", reply_markup=kb.me_estimates(count, data["user_id"]))
 
 
@@ -207,6 +209,7 @@ async def my_profile(message: Message):
 👫 Пол: {my_info_data["gender"]}
 🔞 Возраст: {age}
 🏙 Город: {my_info_data["city"]}
+📸 Instagram: {my_info_data["inst"]}
 🌟 Ваш рейтинг: {round(my_info_data["rating"], 1)}
 ⚡️Вас оценили человек: {rating_data["users_count"]}
 🔝 Ваша позиция: {my_info_data["rating_pos"]}
@@ -227,9 +230,16 @@ async def change(call: CallbackQuery, callback_data: dict):
     if change_type == "age":
         await call.message.answer("Введите возраст", reply_markup=kb.cancel)
         await ChangeStates.change_age.set()
+    if change_type == "inst":
+        if await db.check_premium(call.from_user.id):
+            await call.message.answer("Введите Instagram", reply_markup=kb.cancel)
+            await ChangeStates.change_inst.set()
+        else:
+            await call.message.answer(back_premium_error_text, reply_markup=kb.premium)
+
     if change_type == "photo":
-        await call.message.answer("Пришлите фото", reply_markup=kb.cancel)
-        await ChangeStates.change_photo.set()
+        await call.message.answer("""Ваш рейтинг будет обнулен! 
+Продолжить?""", reply_markup=kb.change_photo)
     await call.answer()
 
 
@@ -241,9 +251,19 @@ async def change_gender(call: CallbackQuery, state: FSMContext):
     await state.finish()
 
 
+@dp.callback_query_handler(Text(startswith="change_photo"))
+async def accept_change_photo(call: CallbackQuery):
+    flag = call.data.split("_")[2]
+    if flag == "acc":
+        await ChangeStates.change_photo.set()
+        await call.message.answer("Пришлите фото", reply_markup=kb.cancel)
+    await call.message.delete()
+
+
 @dp.message_handler(state=ChangeStates.change_photo, content_types="photo")
 async def change_photo(message: Message, state: FSMContext):
     await db.change(message.from_user.id, "photo_id", message.photo[-1].file_id)
+    await db.clear_estimates(message.from_user.id)
     await message.answer("📸 Фото изменено", reply_markup=kb.menu_kb)
     await state.finish()
 
@@ -284,6 +304,13 @@ async def change_age(message: Message, state: FSMContext):
         return
 
 
+@dp.message_handler(state=ChangeStates.change_inst)
+async def change_city(message: Message, state: FSMContext):
+    await db.change(message.from_user.id, "inst", message.text)
+    await message.answer("📸 Instagram изменен", reply_markup=kb.menu_kb)
+    await state.finish()
+
+
 @dp.callback_query_handler(text="deactivate")
 async def deactivate_profile(call: CallbackQuery):
     await call.message.answer(deactivate_profile_text, reply_markup=kb.accept_deactivate)
@@ -317,7 +344,8 @@ async def show_user_profile(call: CallbackQuery, callback_data: dict):
     await call.message.answer_photo(data["photo_id"], caption=f"""✨ Имя: {data["name"]}
 👫 Пол: {data["gender"]}
 🔞 Возраст: {age}
-🏙 Город: {data["city"]}""", reply_markup=kb.send_sms(user_id))
+🏙 Город: {data["city"]}
+📸 Instagram: {data["inst"]}""", reply_markup=kb.send_sms(user_id))
     await call.answer()
 
 
@@ -330,7 +358,7 @@ async def choose_estimate_gender(message: Message):
 @dp.callback_query_handler(Text(startswith="estimate_gender"))
 async def show_estimate(call: CallbackQuery):
     gender = call.data.split("_")[2]
-    data = await db.get_user_for_estimate(call.from_user.id, gender)
+    data = await db.get_user_for_estimate(call.from_user.id, gender, 4)
     if data is None:
         await call.message.edit_text("Упс, кажется анкеты закончились")
         return
@@ -340,8 +368,10 @@ async def show_estimate(call: CallbackQuery):
     await call.message.answer_photo(data["photo_id"], caption=f"""✨ Имя: {data["name"]}
 👫 Пол: {data["gender"]}
 🔞 Возраст: {age}
-🏙 Город: {data["city"]}""", reply_markup=kb.get_estimate(data["user_id"],
-                                                         await db.check_premium(call.from_user.id), gender, 0, 0, 1))
+🏙 Город: {data["city"]}
+📸 Instagram: {data["inst"]}""", reply_markup=kb.get_estimate(data["user_id"],
+                                                             await db.check_premium(call.from_user.id), gender,
+                                                             owner_id=0, premium_bool=3, back=1))
     await call.message.delete()
 
 
@@ -357,9 +387,10 @@ async def back_estimate(call: CallbackQuery, callback_data: dict):
         await call.message.answer_photo(data["photo_id"], caption=f"""✨ Имя: {data["name"]}
 👫 Пол: {data["gender"]}
 🔞 Возраст: {age}
-🏙 Город: {data["city"]}""", reply_markup=kb.get_estimate(owner_id,
-                                                         await db.check_premium(call.from_user.id),
-                                                         selected_gender=gender, premium_bool=1, back=1))
+🏙 Город: {data["city"]}
+📸 Instagram: {data["inst"]}""", reply_markup=kb.get_estimate(owner_id,
+                                                             await db.check_premium(call.from_user.id),
+                                                             selected_gender=gender, premium_bool=1, back=1))
         await call.message.delete()
     else:
         await call.message.answer(back_premium_error_text, reply_markup=kb.premium)
@@ -368,7 +399,9 @@ async def back_estimate(call: CallbackQuery, callback_data: dict):
 
 @dp.callback_query_handler(kb.estimate_data.filter())
 async def add_new_estimate(call: CallbackQuery, callback_data: dict):
-    premium = int(callback_data["premium"])
+    premium = int(callback_data["premium"]) - 1
+    if premium == 0:
+        premium = 4
     owner_id = int(callback_data["user_id"])
     score = callback_data["score"]
     gender = callback_data["gender"]
@@ -384,8 +417,9 @@ async def add_new_estimate(call: CallbackQuery, callback_data: dict):
     await call.message.answer_photo(data["photo_id"], caption=f"""✨ Имя: {data["name"]}
 👫 Пол: {data["gender"]}
 🔞 Возраст: {age}
-🏙 Город: {data["city"]}""", reply_markup=kb.get_estimate(data["user_id"], await db.check_premium(call.from_user.id),
-                                                         gender, owner_id, 1 - premium))
+🏙 Город: {data["city"]}
+📸 Instagram: {data["inst"]}""", reply_markup=kb.get_estimate(data["user_id"], await db.check_premium(call.from_user.id),
+                                                             gender, owner_id, premium))
     await call.message.delete()
 
 
@@ -398,9 +432,10 @@ async def choose_report(call: CallbackQuery, callback_data: dict):
     if data["age"] == 0:
         age = "не указано"
     await bot.send_photo(admin_chat, data["photo_id"], caption=f"""✨ Имя: {data["name"]}
-    👫 Пол: {data["gender"]}
-    🔞 Возраст: {age}
-    🏙 Город: {data["city"]}
+👫 Пол: {data["gender"]}
+🔞 Возраст: {age}
+🏙 Город: {data["city"]}
+📸 Instagram: {data["inst"]}
 """, reply_markup=kb.admin_report(user_id, call.from_user.id))
     data = await db.get_user_for_estimate(call.from_user.id)
     if data is None:
@@ -413,8 +448,9 @@ async def choose_report(call: CallbackQuery, callback_data: dict):
     await call.message.answer_photo(data["photo_id"], caption=f"""✨ Имя: {data["name"]}
 👫 Пол: {data["gender"]}
 🔞 Возраст: {age}
-🏙 Город: {data["city"]}""", reply_markup=kb.get_estimate(data["user_id"],
-                                                         await db.check_premium(call.from_user.id), 0, 0, 1))
+🏙 Город: {data["city"]}
+📸 Instagram: {data["inst"]}""", reply_markup=kb.get_estimate(data["user_id"],
+                                                             await db.check_premium(call.from_user.id), 0, 0, 1))
     await call.message.delete()
 
 
@@ -443,7 +479,26 @@ async def send_sms(message: Message, state: FSMContext):
     receiver_data = await state.get_data()
     await message.bot.send_message(receiver_data["user_id"],
                                    f"Сообщение от {data['name']}, {data['age']}: {message.text}",
-                                   reply_markup=kb.send_sms(message.from_user.id))
+                                   reply_markup=kb.answer_sms(message.from_user.id))
+    await message.answer(finish_sms_text, reply_markup=kb.menu_kb)
+    await state.finish()
+
+
+@dp.callback_query_handler(kb.answer_sms_data.filter())
+async def start_answer_sms(call: CallbackQuery, callback_data: dict, state: FSMContext):
+    user_id = callback_data["user_id"]
+    await call.message.answer(send_sms_text, reply_markup=kb.cancel)
+    await SmsStates.enter_answer.set()
+    await state.update_data(user_id=user_id)
+
+
+@dp.message_handler(state=SmsStates.enter_answer)
+async def answer_sms(message: Message, state: FSMContext):
+    data = await db.get_user(message.from_user.id)
+    receiver_data = await state.get_data()
+    await message.bot.send_message(receiver_data["user_id"],
+                                   f"Сообщение от {data['name']}, {data['age']}: {message.text}",
+                                   reply_markup=kb.answer_sms(message.from_user.id))
     await message.answer(finish_sms_text, reply_markup=kb.menu_kb)
     await state.finish()
 
@@ -511,6 +566,7 @@ async def send_ask_amnesty(message: Message, state: FSMContext):
 👫 Пол: {data["gender"]}
 🔞 Возраст: {age}
 🏙 Город: {data["city"]}
+📸 Instagram: {data["inst"]}
 
 Амнистия: {message.text}""", reply_markup=kb.admin_amnesty(message.from_user.id))
     await message.answer(send_ask_amnesty_text)

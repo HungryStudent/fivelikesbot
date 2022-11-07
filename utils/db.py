@@ -51,7 +51,7 @@ async def add_user(user_id, name, gender, photo_id, ref_id):
     conn = await asyncpg.connect(user=user, password=password,
                                  database=database, host=host)
     await conn.execute(
-        "INSERT INTO users(user_id, name, photo_id, premium_time, gender, age, city, rating, is_ban, is_deactivate, today_rating, invited, reg_date, last_online) VALUES ($1, $2, $3, 0, $4, 0,'не указано', 0, false, false, 0, $5, $6, $7)",
+        "INSERT INTO users(user_id, name, photo_id, premium_time, gender, age, city, inst, rating, is_ban, is_deactivate, today_rating, invited, reg_date, last_online) VALUES ($1, $2, $3, 0, $4, 0,'не указано', 'не указано', 0, false, false, 0, $5, $6, $7)",
         user_id, name, photo_id, gender, ref_id, int(time.time()), int(time.time()))
     await conn.close()
 
@@ -77,8 +77,8 @@ async def get_my_user(user_id):
     conn = await asyncpg.connect(user=user, password=password, database=database, host=host)
     row = await conn.fetchrow(
         "With rnu as (SELECT row_number() over(order by rating desc) as rating_pos, rating, name, photo_id, premium_time, "
-        "gender, age, city, user_id, is_deactivate FROM users) select rating_pos, rating, name, photo_id, premium_time, gender, age, "
-        "city, is_deactivate from rnu WHERE user_id = $1",
+        "gender, age, city, inst, user_id, is_deactivate FROM users) select rating_pos, rating, name, photo_id, premium_time, gender, age, "
+        "city, inst, is_deactivate from rnu WHERE user_id = $1",
         user_id)
     await conn.close()
     return row
@@ -86,7 +86,7 @@ async def get_my_user(user_id):
 
 async def get_user(user_id):
     conn = await asyncpg.connect(user=user, password=password, database=database, host=host)
-    row = await conn.fetchrow("SELECT name, photo_id, gender, age, city FROM users WHERE user_id = $1", user_id)
+    row = await conn.fetchrow("SELECT name, photo_id, gender, age, city, inst FROM users WHERE user_id = $1", user_id)
     await conn.close()
     return row
 
@@ -94,20 +94,20 @@ async def get_user(user_id):
 async def get_user_for_estimate(user_id, gender, premium=1):
     gender_dict = {"m": "М", "f": "Ж", "all": "%"}
     conn = await asyncpg.connect(user=user, password=password, database=database, host=host)
-    if premium:
-        query = "SELECT user_id, name, photo_id, gender, age, city  FROM users WHERE NOT EXISTS(SELECT id FROM likes " \
+    if premium == 1:
+        query = "SELECT user_id, name, photo_id, gender, age, city, inst  FROM users WHERE NOT EXISTS(SELECT id FROM likes " \
                 "WHERE likes.user_id=$1 and likes.owner_id = users.user_id) and users.user_id <> $2 and is_ban = " \
                 f"false and is_deactivate = false and premium_time > $3 and gender = '{gender_dict[gender]}'"
         row = await conn.fetchrow(query, user_id, user_id, int(time.time()))
         if row is not None:
             await conn.close()
             return row
-    query = "SELECT user_id, name, photo_id, gender, age, city  FROM users WHERE NOT EXISTS(SELECT id FROM likes " \
+    query = "SELECT user_id, name, photo_id, gender, age, city, inst FROM users WHERE NOT EXISTS(SELECT id FROM likes " \
             "WHERE likes.user_id=$1 and likes.owner_id = users.user_id) and users.user_id <> $2 and is_ban = false " \
             f"and is_deactivate = false and premium_time < $3 and gender LIKE '{gender_dict[gender]}'"
     row = await conn.fetchrow(query, user_id, user_id, int(time.time()))
     if row is None:
-        query = "SELECT user_id, name, photo_id, gender, age, city  FROM users WHERE NOT EXISTS(SELECT id FROM likes " \
+        query = "SELECT user_id, name, photo_id, gender, age, city, inst  FROM users WHERE NOT EXISTS(SELECT id FROM likes " \
                 "WHERE likes.user_id=$1 and likes.owner_id = users.user_id) and users.user_id <> $2 and is_ban = " \
                 f"false and is_deactivate = false and premium_time > $3 and gender = '{gender_dict[gender]}'"
         row = await conn.fetchrow(query, user_id, user_id, int(time.time()))
@@ -155,6 +155,13 @@ async def change(user_id, column: str, value):
     await conn.close()
 
 
+async def clear_estimates(user_id):
+    conn = await asyncpg.connect(user=user, password=password, database=database, host=host)
+    await conn.fetch(f"DELETE FROM likes WHERE owner_id = $1", user_id)
+    await conn.fetch(f"UPDATE users SET rating = 0, today_rating = 0 WHERE user_id = $1", user_id)
+    await conn.close()
+
+
 async def add_new_estimate(user_id, owner_id, score):
     conn = await asyncpg.connect(user=user, password=password, database=database, host=host)
 
@@ -179,7 +186,7 @@ async def get_estimate_user(user_id):
     conn: Connection = await asyncpg.connect(user=user, password=password,
                                              database=database, host=host)
     row = await conn.fetchrow(
-        "SELECT user_id, name, photo_id, gender, age, city FROM users WHERE user_id = (SELECT user_id FROM likes "
+        "SELECT user_id, name, photo_id, gender, age, city, inst FROM users WHERE user_id = (SELECT user_id FROM likes "
         "WHERE owner_id = $1 and is_viewed = false and is_skip = false LIMIT 1)", user_id)
     if row is None:
         return None, 0, 0

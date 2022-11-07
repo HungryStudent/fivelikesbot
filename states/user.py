@@ -12,6 +12,7 @@ class ChangeStates(StatesGroup):
     change_name = State()
     change_age = State()
     change_city = State()
+    change_inst = State()
     change_photo = State()
 
 
@@ -21,6 +22,7 @@ class ReportStates(StatesGroup):
 
 class SmsStates(StatesGroup):
     enter_msg = State()
+    enter_answer = State()
 
 
 class AmnestyStates(StatesGroup):

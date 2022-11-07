@@ -9,6 +9,7 @@ estimate_data = CallbackData("estimate", "user_id", "score", "premium", "gender"
 report_data = CallbackData("report", "user_id")
 send_report_data = CallbackData("send_report", "user_id", "rep_type", "msg")
 send_sms_data = CallbackData("send_sms", "user_id")
+answer_sms_data = CallbackData("answer_sms", "user_id")
 buy_premium_data = CallbackData("buy_premium", "amount", "days")
 
 menu_kb = ReplyKeyboardMarkup(row_width=3, resize_keyboard=True).add(KeyboardButton('Кто меня оценил❓'),
@@ -26,6 +27,7 @@ active_profile = InlineKeyboardMarkup(row_width=2).add(
     InlineKeyboardButton('👫 Изменить пол', callback_data=change_data.new("gender")),
     InlineKeyboardButton('🔞 Изменить возраст', callback_data=change_data.new("age")),
     InlineKeyboardButton('🏙 Изменить город', callback_data=change_data.new("city")),
+    InlineKeyboardButton('🎗 Добавить Instagram', callback_data=change_data.new("inst")),
     InlineKeyboardButton('📸 Изменить фото', callback_data=change_data.new("photo"))).add(
     InlineKeyboardButton('🚫 Отключить мою анкету', callback_data="deactivate"))
 
@@ -61,6 +63,9 @@ premium = InlineKeyboardMarkup(row_width=1).add(
 
 ask_amnesty = InlineKeyboardMarkup(row_width=1).add(
     InlineKeyboardButton("Обжаловать решение", callback_data="ask_amnesty"))
+
+change_photo = InlineKeyboardMarkup(row_width=2).add(InlineKeyboardButton("Да", callback_data="change_photo_acc"),
+                                                     InlineKeyboardButton("Нет", callback_data="change_photo_can"))
 
 
 def get_partner(partner_url):
@@ -128,7 +133,9 @@ def get_report(user_id, msg):
 def send_sms(user_id):
     return InlineKeyboardMarkup(row_width=1).add(
         InlineKeyboardButton("Отправить сообщение", callback_data=send_sms_data.new(user_id)))
-
+def answer_sms(user_id):
+    return InlineKeyboardMarkup(row_width=1).add(
+        InlineKeyboardButton("Отправить сообщение", callback_data=answer_sms_data.new(user_id)))
 
 def get_share(url):
     return InlineKeyboardMarkup(row_width=1).add(InlineKeyboardButton("Поделиться", url=url),
