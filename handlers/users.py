@@ -428,6 +428,7 @@ async def add_new_estimate(call: CallbackQuery, callback_data: dict):
 @dp.callback_query_handler(kb.report_data.filter())
 async def choose_report(call: CallbackQuery, callback_data: dict):
     user_id = callback_data["user_id"]
+    gender = callback_data["gender"]
     await db.add_new_estimate(call.from_user.id, int(user_id), "skip")
     data = await db.get_user(int(user_id))
     age = data["age"]
@@ -439,7 +440,7 @@ async def choose_report(call: CallbackQuery, callback_data: dict):
 🏙 Город: {data["city"]}
 📸 Instagram: {data["inst"]}
 """, reply_markup=kb.admin_report(user_id, call.from_user.id))
-    data = await db.get_user_for_estimate(call.from_user.id)
+    data = await db.get_user_for_estimate(call.from_user.id, gender)
     if data is None:
         await call.message.answer("Упс, кажется анкеты закончились")
         await call.message.delete()

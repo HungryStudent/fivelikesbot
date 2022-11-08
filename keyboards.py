@@ -6,7 +6,7 @@ user_data = CallbackData("user", "user_id")
 change_data = CallbackData("change", "type")
 back_data = CallbackData("back", "user_id", "gender")
 estimate_data = CallbackData("estimate", "user_id", "score", "premium", "gender")
-report_data = CallbackData("report", "user_id")
+report_data = CallbackData("report", "user_id", "gender")
 send_report_data = CallbackData("send_report", "user_id", "rep_type", "msg")
 send_sms_data = CallbackData("send_sms", "user_id")
 answer_sms_data = CallbackData("answer_sms", "user_id")
@@ -145,7 +145,7 @@ def get_estimate(user_id, have_premium, selected_gender, owner_id=0, premium_boo
                InlineKeyboardButton(sms_text, callback_data=send_sms_data.new(user_id)))
     else:
         kb.add(InlineKeyboardButton(sms_text, callback_data=send_sms_data.new(user_id)))
-    kb.add(InlineKeyboardButton("⛔️Пожаловаться", callback_data=report_data.new(user_id)))
+    kb.add(InlineKeyboardButton("⛔️Пожаловаться", callback_data=report_data.new(user_id, selected_gender)))
     return kb
 
 
