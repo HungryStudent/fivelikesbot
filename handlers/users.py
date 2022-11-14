@@ -296,7 +296,7 @@ async def change_age(message: Message, state: FSMContext):
     except ValueError:
         await message.answer("Укажите ваш реальный возраст!")
         return
-    if 0 < age < 9:
+    if 0 < age < 99:
         await db.change(message.from_user.id, "age", age)
         await message.answer("🔞 Возраст изменен", reply_markup=kb.menu_kb)
         await state.finish()
