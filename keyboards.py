@@ -64,14 +64,14 @@ async def deactive_profile(premium_bool):
         kb.add(InlineKeyboardButton('✅ Включить мою анкету', callback_data="activate"))
     return kb
 
-deactive_profile = InlineKeyboardMarkup(row_width=2).add(
-    InlineKeyboardButton('✨ Изменить имя', callback_data=change_data.new("name")),
-    InlineKeyboardButton('👫 Изменить пол', callback_data=change_data.new("gender")),
-    InlineKeyboardButton('🔞 Изменить возраст', callback_data=change_data.new("age")),
-    InlineKeyboardButton('🏙 Изменить город', callback_data=change_data.new("city")),
-    InlineKeyboardButton('🎗 Добавить Instagram', callback_data=change_data.new("inst")),
-    InlineKeyboardButton('📸 Изменить фото', callback_data=change_data.new("photo"))).add(
-    InlineKeyboardButton('✅ Включить мою анкету', callback_data="activate"))
+# deactive_profile = InlineKeyboardMarkup(row_width=2).add(
+#     InlineKeyboardButton('✨ Изменить имя', callback_data=change_data.new("name")),
+#     InlineKeyboardButton('👫 Изменить пол', callback_data=change_data.new("gender")),
+#     InlineKeyboardButton('🔞 Изменить возраст', callback_data=change_data.new("age")),
+#     InlineKeyboardButton('🏙 Изменить город', callback_data=change_data.new("city")),
+#     InlineKeyboardButton('🎗 Добавить Instagram', callback_data=change_data.new("inst")),
+#     InlineKeyboardButton('📸 Изменить фото', callback_data=change_data.new("photo"))).add(
+#     InlineKeyboardButton('✅ Включить мою анкету', callback_data="activate"))
 
 accept_deactivate = InlineKeyboardMarkup(row_width=2).add(
     InlineKeyboardButton("Отключить", callback_data="deactivate_accept"),
