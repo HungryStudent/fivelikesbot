@@ -3,20 +3,20 @@ from aiogram_broadcaster import TextBroadcaster
 from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
 from create_bot import dp, bot
-from config import admin_chat
+from config import ADMINS
 from handlers.texts import *
 from states.admin import *
 import keyboards as kb
 from utils import db
 
 
-@dp.message_handler(state="*", text="Отменить", chat_id=admin_chat)
+@dp.message_handler(lambda m: m.from_user.id in ADMINS, state="*", text="Отменить")
 async def cancel_input(message: Message, state: FSMContext):
     await message.answer("Ввод остановлен", reply_markup=ReplyKeyboardRemove())
     await state.finish()
 
 
-@dp.callback_query_handler(Text(startswith="ban_"), chat_id=admin_chat)
+@dp.callback_query_handler(lambda m: m.from_user.id in ADMINS, Text(startswith="ban_"))
 async def ban_user(call: CallbackQuery):
     data = call.data.split("_")
     await db.change_ban(int(data[1]), True)
@@ -27,7 +27,7 @@ async def ban_user(call: CallbackQuery):
     await call.message.delete()
 
 
-@dp.callback_query_handler(Text(startswith="unban_"), chat_id=admin_chat)
+@dp.callback_query_handler(lambda m: m.from_user.id in ADMINS, Text(startswith="unban_"))
 async def amnesty_unban(call: CallbackQuery):
     user_id = call.data[6:]
     await db.change_ban(int(user_id), False)
@@ -36,19 +36,19 @@ async def amnesty_unban(call: CallbackQuery):
     await call.message.delete()
 
 
-@dp.callback_query_handler(text="admin_dismiss_report", chat_id=admin_chat)
+@dp.callback_query_handler(lambda m: m.from_user.id in ADMINS, text="admin_dismiss_report")
 async def dismiss_ban_user(call: CallbackQuery):
     await call.message.answer(f"Жалоба на пользователя отклонена", parse_mode="HTML")
     await call.message.delete()
 
 
-@dp.callback_query_handler(text="admin_dismiss_amnesty", chat_id=admin_chat)
+@dp.callback_query_handler(lambda m: m.from_user.id in ADMINS, text="admin_dismiss_amnesty")
 async def dismiss_unban_user(call: CallbackQuery):
     await call.message.answer(f"Амнистия пользователя отклонена", parse_mode="HTML")
     await call.message.delete()
 
 
-@dp.message_handler(commands="unban", chat_id=admin_chat)
+@dp.message_handler(lambda m: m.from_user.id in ADMINS, commands="unban")
 async def unban_user(message: Message):
     user_id = message.get_args()
     if user_id == "":
@@ -58,7 +58,7 @@ async def unban_user(message: Message):
     await message.answer("Пользователь разблокирован")
 
 
-@dp.message_handler(commands="premium", chat_id=admin_chat)
+@dp.message_handler(lambda m: m.from_user.id in ADMINS, commands="premium")
 async def gift_premium(message: Message):
     try:
         user_id, days = message.get_args().split()
@@ -70,7 +70,7 @@ async def gift_premium(message: Message):
     await message.bot.send_message(user_id, f"Администратор подключил вам премиум, дней - {days}")
 
 
-@dp.message_handler(commands="stat", chat_id=admin_chat)
+@dp.message_handler(lambda m: m.from_user.id in ADMINS, commands="stat")
 async def show_stat(message: Message):
     data = await db.get_stat()
     await message.answer(f"""Всего пользователей: {data['all_count']}
@@ -84,13 +84,13 @@ async def show_stat(message: Message):
 Активных: {data["active_premium"]}""")
 
 
-@dp.message_handler(commands="send", chat_id=admin_chat)
+@dp.message_handler(lambda m: m.from_user.id in ADMINS, commands="send")
 async def send_text(message: Message):
     await message.answer("Введите текст рассылки", reply_markup=kb.admin_cancel)
     await SendStates.enter_text.set()
 
 
-@dp.message_handler(state=SendStates.enter_text)
+@dp.message_handler(lambda m: m.from_user.id in ADMINS, state=SendStates.enter_text)
 async def start_send(message: Message, state: FSMContext):
     users = await db.get_users()
     broadcaster = TextBroadcaster(users, message.text, bot=bot)
@@ -99,7 +99,7 @@ async def start_send(message: Message, state: FSMContext):
     await state.finish()
 
 
-@dp.message_handler(commands="public")
+@dp.message_handler(lambda m: m.from_user.id in ADMINS, commands="public")
 async def change_public(message: Message):
     try:
         group_id, username = message.get_args().split()
