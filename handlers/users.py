@@ -5,7 +5,7 @@ from aiogram.dispatcher.handler import CancelHandler
 from aiogram.utils.exceptions import ChatNotFound
 from aiogram.dispatcher.filters import Text
 
-from config import admin_chat, yoomoney_id, partner_chat, partner_url
+from config import ADMINS, yoomoney_id, partner_chat, partner_url
 from create_bot import dp, bot
 from datetime import datetime
 from yoomoney import Quickpay
@@ -27,7 +27,7 @@ class CheckRegMiddleware(BaseMiddleware):
         else:
             return
         curr_state = await dp.storage.get_state(chat=user_id, user=user_id)
-        if curr_state == RegStates.enter_name.state or curr_state == RegStates.enter_photo.state or curr_state == ChangeStates.change_photo.state or '/start' in update.message.text or update.message.chat.id == admin_chat:
+        if curr_state == RegStates.enter_name.state or curr_state == RegStates.enter_photo.state or curr_state == ChangeStates.change_photo.state or '/start' in update.message.text or update.message.chat.id == ADMINS:
             return
         try:
             status: ChatMember = await bot.get_chat_member(partner_chat, user_id)
@@ -36,7 +36,8 @@ class CheckRegMiddleware(BaseMiddleware):
                 raise CancelHandler()
         except ChatNotFound as e:
             print(e)
-            await bot.send_message(admin_chat, "Проблема с каналом партнером")
+            for admin in ADMINS:
+                await bot.send_message(admin, "Проблема с каналом партнером")
         if not await db.check_user(user_id):
             raise CancelHandler()
 
@@ -69,7 +70,8 @@ async def send_report(reporter_id, user_id, text):
     age = data["age"]
     if data["age"] == 0:
         age = "не указано"
-    await bot.send_photo(admin_chat, data["photo_id"], caption=f"""✨ Имя: {data["name"]}
+    for admin in ADMINS:
+        await bot.send_photo(admin, data["photo_id"], caption=f"""✨ Имя: {data["name"]}
 👫 Пол: {data["gender"]}
 🔞 Возраст: {age}
 🏙 Город: {data["city"]}
@@ -434,7 +436,8 @@ async def choose_report(call: CallbackQuery, callback_data: dict):
     age = data["age"]
     if data["age"] == 0:
         age = "не указано"
-    await bot.send_photo(admin_chat, data["photo_id"], caption=f"""✨ Имя: {data["name"]}
+    for admin in ADMINS:
+        await bot.send_photo(admin, data["photo_id"], caption=f"""✨ Имя: {data["name"]}
 👫 Пол: {data["gender"]}
 🔞 Возраст: {age}
 🏙 Город: {data["city"]}
@@ -568,7 +571,8 @@ async def send_ask_amnesty(message: Message, state: FSMContext):
     age = data["age"]
     if data["age"] == 0:
         age = "не указано"
-    await bot.send_photo(admin_chat, data["photo_id"], caption=f"""✨ Имя: {data["name"]}
+    for admin in ADMINS:
+        await bot.send_photo(admin, data["photo_id"], caption=f"""✨ Имя: {data["name"]}
 👫 Пол: {data["gender"]}
 🔞 Возраст: {age}
 🏙 Город: {data["city"]}
