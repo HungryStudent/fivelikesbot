@@ -8,7 +8,14 @@
       <jdbc-url>jdbc:postgresql://localhost:5432/fivelikesbot</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
-    <data-source source="LOCAL" name="deploy" uuid="ff073430-ac53-4162-89b3-c714b5119332">
+    <data-source source="LOCAL" name=" new_deploy" uuid="8649f2c1-65c8-4112-a5f9-a84e965fde9f">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://localhost:5432/fivelikesbot</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
+    <data-source source="LOCAL" name="fivelikesbot@localhost [2]" uuid="419c42f3-f9a6-40a9-9df7-c742c750deba">
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>
